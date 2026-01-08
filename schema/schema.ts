@@ -1,9 +1,9 @@
 import { z } from "zod";
 
 const jobSchema = z.object({
-  title: z.string().optional(),
-  company: z.string().optional(),
-  location: z.string().optional(),
+  title: z.string().optional().default(""),
+  company: z.string().optional().default(""),
+  location: z.string().optional().default(""),
   salary: z.xor([
     z.object({
       type: z
@@ -31,9 +31,9 @@ const jobSchema = z.object({
     .describe(
       "Detailed description of the job, including responsibilities and requirements."
     ),
-  posting_date: z.string().optional(),
-  end_date: z.string().optional(),
-  url: z.url().optional().describe("The URL of the job listing."),
+  posting_date: z.string().optional().default(""),
+  end_date: z.string().optional().default(""),
+  url: z.url().optional().describe("The URL of the job listing.").default(""),
 });
 
 export const jsonSchema = z.toJSONSchema(z.array(jobSchema));
