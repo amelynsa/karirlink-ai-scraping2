@@ -9,7 +9,6 @@ const client = new GoogleGenAI({
 });
 
 export async function extractData(rawData: string) {
-  // const data = await fetchData();
   const response = await client.models.generateContent({
     model: "gemini-2.5-flash",
     contents: `
@@ -19,7 +18,9 @@ export async function extractData(rawData: string) {
     1) { "type": "fixed" (Fixed salary in a period of time), "amount": The amount of the salary }
     2) { "type": "range" (Salary in certain range), min: The lower limit, max: The upper limit }
     3) { "type": "not specified" (salary info not provided) }
-      
+
+    For any property you cannot find the relevant information, ONLY put empty string "".
+
     If you cannot extract any meaningful job listing data, return empty string "".
 
 	  Else, Return list of jobs in JSON format only as specified by the schema.
