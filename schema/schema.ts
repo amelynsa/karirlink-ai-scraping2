@@ -37,3 +37,15 @@ const jobSchema = z.object({
 });
 
 export const jsonSchema = z.toJSONSchema(z.array(jobSchema));
+
+const nextBtnSchema = z.object({
+  btnIdentifier: z
+    .string()
+    .optional()
+    .default("")
+    .describe(
+      "SELECTOR for the next button or link(anchor) element. Can be combination of selectors or specific selector like class or id. Must be VALID selector for CSS only."
+    ),
+});
+
+export const nextBtnJsonSchema = z.toJSONSchema(nextBtnSchema);
