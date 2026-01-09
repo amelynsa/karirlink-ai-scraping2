@@ -1,4 +1,4 @@
-import { jsonSchema } from "../schema/schema.ts";
+import { jsonSchema, nextBtnJsonSchema } from "../schema/schema.ts";
 import { GoogleGenAI } from "@google/genai";
 import * as dotenv from "dotenv";
 
@@ -30,6 +30,28 @@ export async function extractData(rawData: string) {
   });
 
   const data = response.text || JSON.stringify([]);
+
+  return { data, usage: response.usageMetadata };
+}
+
+export async function getNextButton(rawData: string) {
+  const response = await client.models.generateContent({
+    model: "gemini-2.5-flash",
+    contents: `
+    You have to identify the next page button/link element from the following raw HTML content: ${rawData}, if there is any pagination.
+   
+    You have to determine the most proper SELECTOR for the next button or link(anchor) element. Can be combination of selectors or specific selector like class or id. Must be VALID selector for CSS only.
+    
+    If found, Return as a string to the provided json schema.
+    else, return only empty string.
+    `,
+    config: {
+      responseMimeType: "application/json",
+      responseJsonSchema: nextBtnJsonSchema,
+    },
+  });
+
+  const data = response.text || JSON.stringify({});
 
   return { data, usage: response.usageMetadata };
 }
