@@ -6,6 +6,7 @@ export async function getDOMBody(
   browser: Browser,
   url: string
 ): Promise<string> {
+  const page = await browser.newPage();
   try {
     const page = await browser.newPage();
     await page.goto(url, {
@@ -19,6 +20,8 @@ export async function getDOMBody(
   } catch (error: any) {
     console.error("\n", error.message);
     return "";
+  } finally {
+    await page.close();
   }
 }
 
