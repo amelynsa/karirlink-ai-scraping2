@@ -13,7 +13,7 @@ interface ErrorResponse {
   success: false;
   message: string;
   data: {
-    error: ApiError;
+    error?: ApiError;
   };
 }
 
