@@ -1,4 +1,6 @@
-export function safeParseJSONData(input?: string): any[] {
+import { ElementHandle } from "puppeteer";
+
+export function safeParseJSONArrayData(input?: string): any[] {
   if (!input) return [];
 
   try {
