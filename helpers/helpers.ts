@@ -7,6 +7,7 @@ export function safeParseJSONArrayData(input?: string): any[] {
     const parsed = JSON.parse(input);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
+    console.error(error);
     return [];
   }
 }
