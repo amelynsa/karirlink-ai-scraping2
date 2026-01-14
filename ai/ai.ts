@@ -39,6 +39,9 @@ export async function getNextButton(rawData: string) {
     model: "gemini-2.5-flash",
     contents: `
     You have to identify the next page button/link element from the following raw HTML content: ${rawData}, if there is any pagination.
+  
+      First, check if this "${initialSelector}" is a valid SELECTOR for the next page button/link from the specified raw HTML content.
+      If valid, then return it as is. If not valid, then do as told below.
    
     You have to determine the most proper SELECTOR for the next button or link(anchor) element. Can be combination of selectors or specific selector like class or id. Must be VALID selector for CSS only.
     
