@@ -1,4 +1,3 @@
-import { readFile } from "fs/promises";
 import { Browser } from "puppeteer";
 import xlsx from "xlsx";
 import { getNextButton } from "../ai/ai.ts";
@@ -21,7 +20,7 @@ export async function getDOMBody(
   try {
     for (let i = 0; i < MAX_RETRY; i++) {
       try {
-    await page.goto(url, {
+        await page.goto(url, {
           waitUntil: "networkidle2",
         });
       } catch (error) {
