@@ -18,3 +18,8 @@ interface ErrorResponse {
 }
 
 export type ResponseData = SuccessResponse | ErrorResponse;
+
+export interface Result {
+  data: string[];
+  usage: object[];
+}
