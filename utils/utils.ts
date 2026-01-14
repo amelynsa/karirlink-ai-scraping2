@@ -35,11 +35,22 @@ export function readSourcesFromExcel(path: string) {
   return rows;
 }
 
-export async function sumTotalUsageToken() {
-  const content = await readFile("./logs/usage-log.json", "utf-8");
-  const usageData: any[] = JSON.parse(content);
-  // Assuming usageData is an array of objects with a 'totalTokens' field
-  const totalTokens = usageData.reduce(
+export async function sumTotalUsageToken(path: string) {
+  const stream = fs.createReadStream(path);
+
+  const rl = readline.createInterface({
+    input: stream,
+    crlfDelay: Infinity,
+  });
+
+  const results = [];
+
+  for await (const line of rl) {
+    if (!line.trim()) continue;
+    results.push(JSON.parse(line));
+  }
+
+  const totalTokens = results.reduce(
     (sum, item) => sum + (item.totalTokenCount || 0),
     0
   );
