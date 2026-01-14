@@ -23,10 +23,12 @@ export async function getDOMBody(
         await page.goto(url, {
           waitUntil: "networkidle2",
         });
-      } catch (error) {
+      } catch (error: any) {
         if (i === MAX_RETRY) {
           throw error;
         }
+        console.error(error.message);
+        console.log(`Retrying...(${i})`);
         continue;
       }
     }
@@ -46,6 +48,7 @@ export async function getDOMBody(
     // const stream = fs.createWriteStream("./storage/test-get-all.jsonl", {
     //   flags: "a",
     // });
+    let pageCounter = 1;
     if (body) {
       // console.log("Write first html body to stream...");
       // stream.write(`${JSON.stringify({ htmlBody: body })}\n`);
@@ -54,15 +57,15 @@ export async function getDOMBody(
       if (success) {
         usageToken.push(data?.usage || {});
         nextBtnSelector = JSON.parse(data?.content)?.btnIdentifier || "";
-        console.log("Next page selector: ", nextBtnSelector);
       }
     }
 
-    let pageCounter = 1;
     while (true) {
       if (!nextBtnSelector) {
         break;
       }
+      console.log(`(${pageCounter}) Next page selector :`, nextBtnSelector);
+
       const nextPageNavigator = await page
         .waitForSelector(nextBtnSelector)
         .catch(() => null);
@@ -120,7 +123,6 @@ export async function getDOMBody(
         if (success) {
           usageToken.push(data?.usage || {});
           nextBtnSelector = JSON.parse(data?.content)?.btnIdentifier || "";
-          console.log("Next page selector: ", nextBtnSelector);
         }
       }
     }
