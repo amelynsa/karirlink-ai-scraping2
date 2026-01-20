@@ -68,7 +68,7 @@ async function runScraper(
 
     console.log("Extracting data from sources...\n");
     for (const row of rows) {
-      if (!included.includes(row.perusahaan)) {
+      if (included.length > 0 && !included.includes(row.perusahaan)) {
         console.log("Skipped.");
         continue;
       }
