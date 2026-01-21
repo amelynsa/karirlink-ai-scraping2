@@ -333,3 +333,24 @@ await runScraper(RESULT_FILE_PATH, LOG_FILE_PATH, {
 });
 
 console.timeEnd("Process finished in: ");
+
+process.on("SIGINT", async () => {
+  console.log("\nProcess interrupted.");
+  console.log("Counting total extraction usage token...");
+  await sumTotalUsageToken("./logs/usage-log.jsonl");
+  process.exit(0);
+});
+
+process.on("SIGTERM", async () => {
+  console.log("\nProcess interrupted.");
+  console.log("Counting total extraction usage token...");
+  await sumTotalUsageToken("./logs/usage-log.jsonl");
+  process.exit(0);
+});
+
+process.on("uncaughtException", async () => {
+  console.log("\nProcess interrupted.");
+  console.log("Counting total extraction usage token...");
+  await sumTotalUsageToken("./logs/usage-log.jsonl");
+  process.exit(0);
+});
