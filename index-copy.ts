@@ -17,6 +17,7 @@ import { setTimeout } from "timers/promises";
 import { detailpagehtml } from "./storage/test-html.ts";
 import { isResponseObjectValuesEmpty } from "./helpers/isResponseObjectValuesEmpty.ts";
 import type { ScraperOptions } from "./types/ScraperOptions.ts";
+import { argv } from "./helpers/run-scraper-argv.ts";
 
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
 const RESULT_FILE_PATH = "./storage/test-result.jsonl";
@@ -320,11 +321,15 @@ async function runScraper(
 
 console.time("Process finished in: ");
 console.log("Process starting...");
+
+const args = await argv;
 await runScraper(RESULT_FILE_PATH, LOG_FILE_PATH, {
-  includeCompanyFromSource: ["Bank Mandiri", "Bank BRI"],
-  maxJobDetailsNavigatorPerPage: 0,
-  maxPagesPerSource: 1,
+  includeCompanyFromSource:
+    args.includeCompanyFromSource?.length === 1
+      ? args.includeCompanyFromSource[0]
+      : args.includeCompanyFromSource,
+  maxPagesPerSource: args.maxPagesPerSource,
+  maxJobDetailsNavigatorPerPage: args.maxJobDetailsNavigatorPerPage,
 });
 
-// await sumTotalUsageToken("./logs/usage-log.jsonl");
 console.timeEnd("Process finished in: ");
