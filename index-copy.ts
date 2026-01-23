@@ -428,6 +428,7 @@ async function runScraper(
     console.error(error);
     throw error;
   } finally {
+    summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
     await browser.close();
   }
 }
