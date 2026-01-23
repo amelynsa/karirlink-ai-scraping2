@@ -85,12 +85,17 @@ async function runScraper(
   if (fs.existsSync(resultFilepath)) {
     fs.truncateSync(resultFilepath, 0);
   }
+  if (fs.existsSync(CSV_RESULT_FILE_PATH)) {
+    fs.truncateSync(CSV_RESULT_FILE_PATH, 0);
+  }
   const streamUsageLog = fs.createWriteStream(usageLogFilepath, {
     flags: "a",
   });
   const streamExtractedData = fs.createWriteStream(resultFilepath, {
     flags: "a",
   });
+  const streamCSVExtractedData = fs.createWriteStream(CSV_RESULT_FILE_PATH);
+  csvStream.pipe(streamCSVExtractedData);
 
   try {
     console.log("Reading sources...");
