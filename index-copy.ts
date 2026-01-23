@@ -18,9 +18,41 @@ import { detailpagehtml } from "./storage/test-html.ts";
 import { isResponseObjectValuesEmpty } from "./helpers/isResponseObjectValuesEmpty.ts";
 import type { ScraperOptions } from "./types/ScraperOptions.ts";
 import { argv } from "./helpers/run-scraper-argv.ts";
+import { extractedDataToCSVRow } from "./helpers/extractedDataToCSVRow.ts";
+import { summarizeRunResult } from "./helpers/summarizeRunResult.ts";
+import { csvStream } from "./helpers/extracted-data-csv-config.ts";
 
+const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
 const RESULT_FILE_PATH = "./storage/test-result.jsonl";
+const CSV_RESULT_FILE_PATH = `./storage/test-result-${TIMESTAMP}.csv`;
+const USAGE_DATA: Array<any> = [];
+const EXTRACTED_DATA: Array<any> = [];
+let NUMBER_OF_SOURCES: number = 0;
+
+process.on("SIGINT", () => {
+  console.log("\nProcess interrupted.");
+  console.log("Menganalisis hasil akhir...");
+  summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
+  console.timeEnd("Process finished in ");
+  process.exit(0);
+});
+process.on("SIGTERM", () => {
+  console.log("\nProcess interrupted.");
+  console.log("Menganalisis hasil akhir...");
+  summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
+  console.timeEnd("Process finished in ");
+  process.exit(0);
+});
+
+process.on("uncaughtException", () => {
+  console.log("\nUncaught exception occurred.");
+  console.log("Menganalisis hasil akhir...");
+  summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
+  console.timeEnd("Process finished in ");
+  process.exit(1);
+});
+6;
 
 async function runScraper(
   resultFilepath: string = RESULT_FILE_PATH,
