@@ -188,7 +188,19 @@ async function runScraper(
                 );
                 detailPage = await browser.newPage();
                 console.log(`  (${index + 1}) Navigating to page detail...`);
-                await detailPage?.goto(detail.selector);
+                  for (let attempt = 0; attempt < 3; attempt++) {
+                    try {
+                      await detailPage?.goto(detail.selector, {
+                        waitUntil: "networkidle2",
+                      });
+                    } catch (error: any) {
+                      if (attempt === 3) {
+                        throw error;
+                      }
+                      console.error(error.message);
+                      console.log(`Retrying...(${attempt})`);
+                    }
+                  }
               } else {
                 console.log(
                   `  (${index + 1}) Page detail selector :`,
