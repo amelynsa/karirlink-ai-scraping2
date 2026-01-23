@@ -106,10 +106,14 @@ async function runScraper(
 
     console.log("Extracting data from sources...\n");
     for (const row of rows) {
+      let page;
+      try {
       if (included.length > 0 && !included.includes(row.perusahaan)) {
         console.log("Skipped.");
         continue;
       }
+        NUMBER_OF_SOURCES++;
+        page = await browser.newPage();
       console.log(`Getting job listings data from: ${row.karirURL}...`);
       const page = await browser.newPage();
       for (let i = 0; i < 3; i++) {
@@ -395,8 +399,22 @@ async function runScraper(
 
         // end point for traversing a company career page
       } // end while
-      await page.close();
-      console.log();
+      } catch (error: any) {
+        // handle error here while continuing to next ROW
+        // console.log(error.message);
+        // const writeResponse = {
+        //   success: false as false,
+        //   message: error.message as string,
+        // };
+        // EXTRACTED_DATA.push(writeResponse);
+        // console.log(`Writing error data to write stream and CSV`);
+        // streamExtractedData.write(`${JSON.stringify(writeResponse)}\n`);
+        // const csvRow = extractedDataToCSVRow(writeResponse);
+        // // streamCSVExtractedData.write(csvRow);
+        // csvStream.write(csvRow);
+      } finally {
+        if (page) await page.close();
+      }
     } // this is the end for loop of rows
     // cleane(extractdata)
 
