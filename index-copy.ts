@@ -167,6 +167,7 @@ async function runScraper(
               `(Page: ${pageCounter}) Writing usage log to write stream from getPageDetailSelector`,
             );
             streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
+              USAGE_DATA.push(data?.usage);
             const details: any[] = JSON.parse(data?.content) || [];
 
             for (const [index, detail] of details.entries()) {
@@ -244,16 +245,23 @@ async function runScraper(
                     const writeResponse = {
                       success,
                       message,
-                      data: { ...jobDetailData, url: detailPage?.url() },
+                        data: {
+                          ...jobDetailData,
+                          url: detailPage?.url(),
+                        },
                     };
+                      EXTRACTED_DATA.push(writeResponse);
                     console.log(
                       `  (${
                         index + 1
-                      }) Writing extracted page detail data to write stream`,
+                        }) Writing extracted page detail data to write stream and CSV`,
                     );
                     streamExtractedData.write(
                       `${JSON.stringify(writeResponse)}\n`,
                     );
+                      // streamCSVExtractedData.write(csvRow);
+                      const csvRow = extractedDataToCSVRow(writeResponse);
+                      csvStream.write(csvRow);
                   } else {
                     console.log(`  (${index + 1}) Job listing data is empty`);
                   }
@@ -265,6 +273,21 @@ async function runScraper(
                   streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
                 } else {
                   console.log(`(${index + 1}) Error:\n${data.error}`);
+                    const writeResponse = {
+                      success,
+                      message,
+                      data: { error: data?.error },
+                    };
+                    EXTRACTED_DATA.push(writeResponse);
+                    console.log(
+                      `  (${index + 1}) Writing error data extraction from job page detail to write stream and CSV`,
+                    );
+                    streamExtractedData.write(
+                      `${JSON.stringify(writeResponse)}\n`,
+                    );
+                    const csvRow = extractedDataToCSVRow(writeResponse);
+                    // streamCSVExtractedData.write(csvRow);
+                    csvStream.write(csvRow);
                 }
               }
               // console.log(detailPage?.url());
@@ -289,20 +312,41 @@ async function runScraper(
             if (success) {
               const jobData: any[] = safeParseJSON(data?.content) || [];
               extractedData.push(...jobData);
+
               jobData.forEach((job) => {
                 const writeResponse = {
                   success,
                   message,
                   data: job,
                 };
+                  EXTRACTED_DATA.push(writeResponse);
+                  console.log(
+                    `Writing extracted data from rawBody to write stream and CSV`,
+                  );
+                  streamExtractedData.write(
+                    `${JSON.stringify(writeResponse)}\n`,
+                  );
+                  const csvRow = extractedDataToCSVRow(writeResponse);
+                  csvStream.write(csvRow);
+                  // streamCSVExtractedData.write(csvRow);
+                });
+                console.log(`Writing usage log data to write stream`);
+                streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
+                USAGE_DATA.push(data?.usage);
+              } else {
                 console.log(
-                  `Writing extracted data from rawBody to write stream`,
+                  `Writing error data extraction from rawBody to write stream and CSV`,
                 );
+                const writeResponse = {
+                  success,
+                  message,
+                  data: { error: data?.error },
+                };
+                EXTRACTED_DATA.push(writeResponse);
                 streamExtractedData.write(`${JSON.stringify(writeResponse)}\n`);
-              });
-
-              console.log(`Writing usage log data to write stream`);
-              streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
+                const csvRow = extractedDataToCSVRow(writeResponse);
+                csvStream.write(csvRow);
+                // streamCSVExtractedData.write(csvRow);
             }
           }
         }
@@ -321,6 +365,8 @@ async function runScraper(
             `Writing usage log data to write stream from getNextButton`,
           );
           streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
+            USAGE_DATA.push(data?.usage);
+
           const nextBtnSelector =
             JSON.parse(data?.content)?.btnIdentifier || "";
 
