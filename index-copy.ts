@@ -8,7 +8,7 @@ import { getPageDetailSelector } from "./ai/getPageDetailSelector.ts";
 import { extractPageDetailData } from "./ai/extractPageDetailData.ts";
 import { clickToPageDetail } from "./helpers/clickToPageDetail.ts";
 import { gotoNextPage } from "./helpers/gotoNextPage.ts";
-import z from "zod";
+import z, { set } from "zod";
 import { setTimeout } from "timers/promises";
 import { isResponseObjectValuesEmpty } from "./helpers/isResponseObjectValuesEmpty.ts";
 import type { ScraperOptions } from "./types/ScraperOptions.ts";
@@ -166,6 +166,7 @@ async function runScraper(
                       await detailPage?.goto(detail.selector, {
                         waitUntil: "networkidle2",
                       });
+                      await setTimeout(15000);
                     } catch (error: any) {
                       if (attempt === 3) {
                         throw error;
@@ -200,6 +201,7 @@ async function runScraper(
                     page,
                     toPageDetailSelector,
                   );
+                  await setTimeout(15000);
                 }
                 console.log(
                   `  (${index + 1}) On page detail : ${detailPage?.url()}`,
@@ -357,6 +359,7 @@ async function runScraper(
 
             try {
               await gotoNextPage(page, nextBtnSelector);
+              await setTimeout(15000);
               pageCounter++;
             } catch (error: any) {
               console.error(error);
