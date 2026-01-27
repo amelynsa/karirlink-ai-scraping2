@@ -22,8 +22,8 @@ export async function extractPageDetailData(
           - No expiration / closing / end date is provided, OR
           - The expiration / closing / end date is in the future relative to the current date(${Date.now()}).
       - A job listing is NOT ACTIVE if:
-        - There is content in the page that explicitly states that the job is "expired", "closed", "no longer available", or equivalent phrase / statement.
-        - OR an expiration / closing / end date is provided and that date is earlier than the current date(${Date.now()}).
+        - There is content in the page that explicitly states that the job is "expired", "closed", "no longer available", "apply before" or equivalent phrase / statement.
+        - OR an "expiration" / "closing" / "end date" / "apply before" or any equivalent phrase / statement date is provided and that date is earlier than the current date(${Date.now()}).
       - If a job is ACTIVE, return it as specified in the schema.
       - If a job is NOT ACTIVE, return ONLY empty string.
       - If the expiration status cannot be determined from the page content, treat the job as ACTIVE, and return it as specified in the schema.
