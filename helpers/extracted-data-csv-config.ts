@@ -2,6 +2,7 @@ import { format } from "fast-csv";
 
 export const csvStream = format({
   headers: [
+    "timestamp",
     "success",
     "message",
     "errorData",

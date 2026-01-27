@@ -17,6 +17,7 @@ export type Data = SuccessData | ErrorData;
 
 export function extractedDataToCSVRow(data: Data): Record<string, any> {
   const csvData = {
+    timestamp: new Date().toISOString(),
     success: data.success,
     message: data.message,
     errorData: data.success ? "" : JSON.stringify(data?.data?.error || {}),
