@@ -160,7 +160,9 @@ async function runScraper(
                     `  (${index + 1}) Page detail URL : ${detail.selector}`,
                   );
                   detailPage = await browser.newPage();
-                  console.log(`  (${index + 1}) Navigating to page detail...`);
+                    console.log(
+                      `  (${index + 1}) Navigating to page detail...`,
+                    );
                   for (let attempt = 0; attempt < 3; attempt++) {
                     try {
                       await detailPage?.goto(detail.selector, {
@@ -169,7 +171,7 @@ async function runScraper(
                       await setTimeout(15000);
                     } catch (error: any) {
                       if (attempt === 3) {
-                        throw error;
+                          throw new ScraperError("Navigation failed");
                       }
                       console.error(error.message);
                       console.log(`Retrying...(${attempt})`);
@@ -195,12 +197,18 @@ async function runScraper(
                     // throw new Error("Page detail navigation element is disabled.");
                     continue;
                   }
-                  console.log(`  (${index + 1}) Navigating to page detail...`);
+                    console.log(
+                      `  (${index + 1}) Navigating to page detail...`,
+                    );
 
+                    try {
                   detailPage = await clickToPageDetail(
                     page,
                     toPageDetailSelector,
                   );
+                    } catch (error: any) {
+                      throw new ScraperError("Navigation failed");
+                    }
                   await setTimeout(15000);
                 }
                 console.log(
@@ -259,22 +267,16 @@ async function runScraper(
                     );
                     streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
                   } else {
-                    console.log(`(${index + 1}) Error:\n${data.error}`);
+                      console.log(`(${index + 1}) Error: ${data.error}`);
                     const writeResponse = {
                       success,
                       message,
                       data: { error: data?.error },
                     };
-                    EXTRACTED_DATA.push(writeResponse);
-                    console.log(
-                      `  (${index + 1}) Writing error data extraction from job page detail to write stream and CSV`,
-                    );
-                    streamExtractedData.write(
-                      `${JSON.stringify(writeResponse)}\n`,
-                    );
-                    const csvRow = extractedDataToCSVRow(writeResponse);
-                    // streamCSVExtractedData.write(csvRow);
-                    csvStream.write(csvRow);
+
+                      const error = new ScraperError(message);
+                      error.data = data?.error;
+                      throw error;
                   }
                 }
                 // console.log(detailPage?.url());
@@ -284,6 +286,28 @@ async function runScraper(
                   await detailPage?.close();
                 }
                 await page.goto(prevUrl, { waitUntil: "networkidle2" });
+                    await lazyLoadPage(page);
+                  }
+                } catch (error: any) {
+                  const writeResponse = {
+                    success: false as false,
+                    message: error.message,
+                    ...(error?.data
+                      ? { data: { error: error?.data?.error } }
+                      : {}),
+                  };
+                  console.log(
+                    ` (${
+                      index + 1
+                    }) Writing error data to write stream and CSV`,
+                  );
+                  handleScrapingError(
+                    csvStream,
+                    streamExtractedData,
+                    writeResponse,
+                    EXTRACTED_DATA,
+                  );
+                }
               }
               if (!jobListDetails.length) {
                 console.log(jobListDetails.length);
@@ -322,18 +346,19 @@ async function runScraper(
                 USAGE_DATA.push(data?.usage);
               } else {
                 console.log(
-                  `Writing error data extraction from rawBody to write stream and CSV`,
+                  ` Writing error data extraction to write stream and CSV`,
                 );
                 const writeResponse = {
                   success,
                   message,
                   data: { error: data?.error },
                 };
-                EXTRACTED_DATA.push(writeResponse);
-                streamExtractedData.write(`${JSON.stringify(writeResponse)}\n`);
-                const csvRow = extractedDataToCSVRow(writeResponse);
-                csvStream.write(csvRow);
-                // streamCSVExtractedData.write(csvRow);
+                handleScrapingError(
+                  csvStream,
+                  streamExtractedData,
+                  writeResponse,
+                  EXTRACTED_DATA,
+                );
               }
             }
           }
@@ -346,7 +371,7 @@ async function runScraper(
             console.log("Reached max page.");
             break;
           }
-          const { success, data } = await getNextButton(rawBody);
+          const { success, data, message } = await getNextButton(rawBody);
           if (success) {
             console.log(
               `Writing usage log data to write stream from getNextButton`,
@@ -360,30 +385,32 @@ async function runScraper(
             try {
               await gotoNextPage(page, nextBtnSelector);
               await setTimeout(15000);
+              await lazyLoadPage(page);
               pageCounter++;
             } catch (error: any) {
-              console.error(error);
-              break;
+              throw error;
             }
           } else {
-            break;
+            const error = new ScraperError(message);
+            error.data = data.error;
+            throw error;
           }
 
           // end point for traversing a company career page
         } // end while
       } catch (error: any) {
-        // handle error here while continuing to next ROW
-        // console.log(error.message);
-        // const writeResponse = {
-        //   success: false as false,
-        //   message: error.message as string,
-        // };
-        // EXTRACTED_DATA.push(writeResponse);
-        // console.log(`Writing error data to write stream and CSV`);
-        // streamExtractedData.write(`${JSON.stringify(writeResponse)}\n`);
-        // const csvRow = extractedDataToCSVRow(writeResponse);
-        // // streamCSVExtractedData.write(csvRow);
-        // csvStream.write(csvRow);
+        console.error(error.message);
+        const writeResponse = {
+          success: false as false,
+          message: error.message,
+          ...(error?.data ? { data: { error: error?.data?.error } } : {}),
+        };
+        handleScrapingError(
+          csvStream,
+          streamExtractedData,
+          writeResponse,
+          EXTRACTED_DATA,
+        );
       } finally {
         if (page) await page.close();
       }
