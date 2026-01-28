@@ -1,5 +1,5 @@
 import { extractData, getNextButton } from "./ai/ai.ts";
-import { readSourcesFromExcel, sumTotalUsageToken } from "./utils/utils.ts";
+import { readSourcesFromExcel } from "./utils/utils.ts";
 import puppeteer, { Page } from "puppeteer";
 import * as fs from "fs";
 import { isElementDisabled, safeParseJSON } from "./helpers/helpers.ts";
@@ -8,12 +8,11 @@ import { getPageDetailSelector } from "./ai/getPageDetailSelector.ts";
 import { extractPageDetailData } from "./ai/extractPageDetailData.ts";
 import { clickToPageDetail } from "./helpers/clickToPageDetail.ts";
 import { gotoNextPage } from "./helpers/gotoNextPage.ts";
-import z, { set } from "zod";
+import z from "zod";
 import { setTimeout } from "timers/promises";
 import { isResponseObjectValuesEmpty } from "./helpers/isResponseObjectValuesEmpty.ts";
 import type { ScraperOptions } from "./types/ScraperOptions.ts";
 import { argv } from "./helpers/run-scraper-argv.ts";
-import { extractedDataToCSVRow } from "./helpers/extractedDataToCSVRow.ts";
 import { summarizeRunResult } from "./helpers/summarizeRunResult.ts";
 import { csvStream } from "./helpers/extracted-data-csv-config.ts";
 import { handleScrapingError } from "./helpers/handleScrapingError.ts";
@@ -136,7 +135,6 @@ async function runScraper(
             }
             console.error(error.message);
             console.log(`Retrying...(${i})`);
-            // continue;
           }
         }
         await lazyLoadPage(page);
@@ -163,7 +161,6 @@ async function runScraper(
                 try {
                   const toPageDetailSelector = detail.selector;
                   if (!toPageDetailSelector) {
-                    // throw new Error("No page detail navigation selector.");
                     continue;
                   }
                   const urlSchema = z.url();
@@ -206,13 +203,11 @@ async function runScraper(
                       .catch(() => null);
 
                     if (!toPageDetail) {
-                      // throw new Error("No page detail navigation element.");
                       continue;
                     }
 
                     const isDisabled = await isElementDisabled(toPageDetail);
                     if (isDisabled) {
-                      // throw new Error("Page detail navigation element is disabled.");
                       continue;
                     }
                     console.log(
@@ -293,8 +288,6 @@ async function runScraper(
                       throw error;
                     }
                   }
-                  // console.log(detailPage?.url());
-                  // console.log(page.url());
 
                   if (detailPage !== page) {
                     await detailPage?.close();
@@ -413,6 +406,9 @@ async function runScraper(
         } // end while
       } catch (error: any) {
         console.error(error.message);
+        if (!(error instanceof ScraperError)) {
+          continue;
+        }
         const writeResponse = {
           success: false as false,
           message: error.message,
