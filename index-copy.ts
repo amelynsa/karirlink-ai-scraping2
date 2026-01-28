@@ -112,7 +112,12 @@ async function runScraper(
           continue;
         }
         NUMBER_OF_SOURCES++;
+        const pages = await browser.pages();
+        if (pages.length > 0) {
+          page = pages[0];
+        } else {
         page = await browser.newPage();
+        }
         console.log(`Getting job listings data from: ${row.karirURL}...`);
         for (let i = 0; i < 3; i++) {
           try {
@@ -291,7 +296,7 @@ async function runScraper(
 
                 if (detailPage !== page) {
                   await detailPage?.close();
-                }
+                  } else {
                 await page.goto(prevUrl, { waitUntil: "networkidle2" });
                     await lazyLoadPage(page);
                   }
