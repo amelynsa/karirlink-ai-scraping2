@@ -2,6 +2,12 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
 export const argv = yargs(hideBin(process.argv))
+  .option("headlessBrowser", {
+    alias: "H",
+    type: "boolean",
+    default: true,
+    describe: "Launch browser on headless mode",
+  })
   .option("includeCompanyFromSource", {
     alias: "I",
     type: "array",
