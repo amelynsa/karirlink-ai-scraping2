@@ -122,7 +122,7 @@ async function runScraper(
         if (pages.length > 0) {
           page = pages[0];
         } else {
-        page = await browser.newPage();
+          page = await browser.newPage();
         }
         console.log(`Getting job listings data from: ${row.karirURL}...`);
         for (let i = 0; i < 3; i++) {
@@ -161,151 +161,145 @@ async function runScraper(
 
               for (const [index, detail] of details.entries()) {
                 try {
-                const toPageDetailSelector = detail.selector;
-                if (!toPageDetailSelector) {
-                  // throw new Error("No page detail navigation selector.");
-                  continue;
-                }
-                const urlSchema = z.url();
+                  const toPageDetailSelector = detail.selector;
+                  if (!toPageDetailSelector) {
+                    // throw new Error("No page detail navigation selector.");
+                    continue;
+                  }
+                  const urlSchema = z.url();
 
-                console.log(`  (${index + 1}) Origin URL :`, prevUrl);
-                console.log(`  (${index + 1}) Actual URL :`, page.url());
-                let detailPage: Page | undefined;
+                  console.log(`  (${index + 1}) Origin URL :`, prevUrl);
+                  console.log(`  (${index + 1}) Actual URL :`, page.url());
+                  let detailPage: Page | undefined;
 
-                if (urlSchema.safeParse(detail.selector).success) {
-                  console.log(
-                    `  (${index + 1}) Page detail URL : ${detail.selector}`,
-                  );
-                  detailPage = await browser.newPage();
+                  if (urlSchema.safeParse(detail.selector).success) {
+                    console.log(
+                      `  (${index + 1}) Page detail URL : ${detail.selector}`,
+                    );
+                    detailPage = await browser.newPage();
                     console.log(
                       `  (${index + 1}) Navigating to page detail...`,
                     );
-                  for (let attempt = 0; attempt < 3; attempt++) {
-                    try {
-                      await detailPage?.goto(detail.selector, {
-                        waitUntil: "networkidle2",
-                      });
-                      await setTimeout(15000);
-                    } catch (error: any) {
-                      if (attempt === 3) {
+                    for (let attempt = 0; attempt < 3; attempt++) {
+                      try {
+                        await detailPage?.goto(detail.selector, {
+                          waitUntil: "networkidle2",
+                        });
+                        await setTimeout(15000);
+                      } catch (error: any) {
+                        if (attempt === 3) {
                           throw new ScraperError("Navigation failed");
+                        }
+                        console.error(error.message);
+                        console.log(`Retrying...(${attempt})`);
                       }
-                      console.error(error.message);
-                      console.log(`Retrying...(${attempt})`);
                     }
-                  }
                     await lazyLoadPage(detailPage);
-                } else {
-                  console.log(
-                    `  (${index + 1}) Page detail selector :`,
-                    toPageDetailSelector,
-                  );
+                  } else {
+                    console.log(
+                      `  (${index + 1}) Page detail selector :`,
+                      toPageDetailSelector,
+                    );
 
-                  const toPageDetail = await page
-                    .waitForSelector(toPageDetailSelector)
-                    .catch(() => null);
+                    const toPageDetail = await page
+                      .waitForSelector(toPageDetailSelector)
+                      .catch(() => null);
 
-                  if (!toPageDetail) {
-                    // throw new Error("No page detail navigation element.");
-                    continue;
-                  }
+                    if (!toPageDetail) {
+                      // throw new Error("No page detail navigation element.");
+                      continue;
+                    }
 
-                  const isDisabled = await isElementDisabled(toPageDetail);
-                  if (isDisabled) {
-                    // throw new Error("Page detail navigation element is disabled.");
-                    continue;
-                  }
+                    const isDisabled = await isElementDisabled(toPageDetail);
+                    if (isDisabled) {
+                      // throw new Error("Page detail navigation element is disabled.");
+                      continue;
+                    }
                     console.log(
                       `  (${index + 1}) Navigating to page detail...`,
                     );
 
                     try {
-                  detailPage = await clickToPageDetail(
-                    page,
-                    toPageDetailSelector,
-                  );
+                      detailPage = await clickToPageDetail(
+                        page,
+                        toPageDetailSelector,
+                      );
                     } catch (error: any) {
                       throw new ScraperError("Navigation failed");
                     }
-                  await setTimeout(15000);
-                }
-                console.log(
-                  `  (${index + 1}) On page detail : ${detailPage?.url()}`,
-                );
-
-                // await Promise.all([
-                //   page.waitForNavigation().catch(() => null),
-                //   toPageDetail?.click(),
-                // ]);
-
-                const rawDetailBody = detailPage
-                  ? await getDOMBody(detailPage)
-                  : "";
-                if (rawDetailBody) {
+                    await setTimeout(15000);
+                  }
                   console.log(
-                    `  (${
-                      index + 1
-                    }) AI is extracting job detail data from raw detail page...`,
+                    `  (${index + 1}) On page detail : ${detailPage?.url()}`,
                   );
-                  const { success, message, data } =
-                    await extractPageDetailData(rawDetailBody);
-                  await setTimeout(30000);
-                  if (success) {
-                    const jobDetailData: any = safeParseJSON(data?.content);
-                    if (!isResponseObjectValuesEmpty(jobDetailData)) {
-                      extractedData.push(jobDetailData);
-                      jobListDetails.push(jobDetailData);
-                      const writeResponse = {
-                        success,
-                        message,
-                        data: {
-                          ...jobDetailData,
-                          url: detailPage?.url(),
-                        },
-                      };
-                      EXTRACTED_DATA.push(writeResponse);
-                      console.log(
-                        `  (${
-                          index + 1
-                        }) Writing extracted page detail data to write stream and CSV`,
-                      );
+
+                  const rawDetailBody = detailPage
+                    ? await getDOMBody(detailPage)
+                    : "";
+                  if (rawDetailBody) {
+                    console.log(
+                      `  (${
+                        index + 1
+                      }) AI is extracting job detail data from raw detail page...`,
+                    );
+                    const { success, message, data } =
+                      await extractPageDetailData(rawDetailBody);
+                    await setTimeout(30000);
+                    if (success) {
+                      const jobDetailData: any = safeParseJSON(data?.content);
+                      if (!isResponseObjectValuesEmpty(jobDetailData)) {
+                        extractedData.push(jobDetailData);
+                        jobListDetails.push(jobDetailData);
+                        const writeResponse = {
+                          success,
+                          message,
+                          data: {
+                            ...jobDetailData,
+                            url: detailPage?.url(),
+                          },
+                        };
+                        console.log(
+                          `  (${
+                            index + 1
+                          }) Writing extracted page detail data to write stream and CSV`,
+                        );
                         handleScrapingSuccess(
                           csvStream,
                           streamExtractedData,
                           writeResponse,
                           EXTRACTED_DATA,
                         );
-                    } else {
+                      } else {
                         console.log(
                           `  (${index + 1}) Job listing data is empty`,
                         );
-                    }
-                    console.log(
-                      `  (${
-                        index + 1
-                      }) Writing usage log data to write stream from extracting page detail`,
-                    );
-                    streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
-                  } else {
+                      }
+                      console.log(
+                        `  (${
+                          index + 1
+                        }) Writing usage log data to write stream from extracting page detail`,
+                      );
+                      streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
+                    } else {
                       console.log(`(${index + 1}) Error: ${data.error}`);
-                    const writeResponse = {
-                      success,
-                      message,
-                      data: { error: data?.error },
-                    };
+                      const writeResponse = {
+                        success,
+                        message,
+                        data: { error: data?.error },
+                      };
 
                       const error = new ScraperError(message);
                       error.data = data?.error;
                       throw error;
+                    }
                   }
-                }
-                // console.log(detailPage?.url());
-                // console.log(page.url());
+                  // console.log(detailPage?.url());
+                  // console.log(page.url());
 
-                if (detailPage !== page) {
-                  await detailPage?.close();
+                  if (detailPage !== page) {
+                    await detailPage?.close();
                   } else {
-                await page.goto(prevUrl, { waitUntil: "networkidle2" });
+                    await page.goto(prevUrl, { waitUntil: "networkidle2" });
                     await lazyLoadPage(page);
                   }
                 } catch (error: any) {
