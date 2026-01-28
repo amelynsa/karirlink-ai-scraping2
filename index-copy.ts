@@ -16,6 +16,10 @@ import { argv } from "./helpers/run-scraper-argv.ts";
 import { extractedDataToCSVRow } from "./helpers/extractedDataToCSVRow.ts";
 import { summarizeRunResult } from "./helpers/summarizeRunResult.ts";
 import { csvStream } from "./helpers/extracted-data-csv-config.ts";
+import { handleScrapingError } from "./helpers/handleScrapingError.ts";
+import { handleScrapingSuccess } from "./helpers/handleScrapingSuccess.ts";
+import { ScraperError } from "./types/ScraperErrorClass.ts";
+import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -144,6 +148,7 @@ async function runScraper(
               const details: any[] = JSON.parse(data?.content) || [];
 
               for (const [index, detail] of details.entries()) {
+                try {
                 const toPageDetailSelector = detail.selector;
                 if (!toPageDetailSelector) {
                   // throw new Error("No page detail navigation selector.");
@@ -251,14 +256,16 @@ async function runScraper(
                           index + 1
                         }) Writing extracted page detail data to write stream and CSV`,
                       );
-                      streamExtractedData.write(
-                        `${JSON.stringify(writeResponse)}\n`,
-                      );
-                      // streamCSVExtractedData.write(csvRow);
-                      const csvRow = extractedDataToCSVRow(writeResponse);
-                      csvStream.write(csvRow);
+                        handleScrapingSuccess(
+                          csvStream,
+                          streamExtractedData,
+                          writeResponse,
+                          EXTRACTED_DATA,
+                        );
                     } else {
-                      console.log(`  (${index + 1}) Job listing data is empty`);
+                        console.log(
+                          `  (${index + 1}) Job listing data is empty`,
+                        );
                     }
                     console.log(
                       `  (${
@@ -330,16 +337,15 @@ async function runScraper(
                     message,
                     data: job,
                   };
-                  EXTRACTED_DATA.push(writeResponse);
                   console.log(
-                    `Writing extracted data from rawBody to write stream and CSV`,
+                    ` Writing extracted data from rawBody to write stream and CSV`,
                   );
-                  streamExtractedData.write(
-                    `${JSON.stringify(writeResponse)}\n`,
+                  handleScrapingSuccess(
+                    csvStream,
+                    streamExtractedData,
+                    writeResponse,
+                    EXTRACTED_DATA,
                   );
-                  const csvRow = extractedDataToCSVRow(writeResponse);
-                  csvStream.write(csvRow);
-                  // streamCSVExtractedData.write(csvRow);
                 });
                 console.log(`Writing usage log data to write stream`);
                 streamUsageLog.write(`${JSON.stringify(data?.usage)}\n`);
