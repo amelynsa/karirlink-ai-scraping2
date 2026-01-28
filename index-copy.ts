@@ -139,6 +139,7 @@ async function runScraper(
             // continue;
           }
         }
+        await lazyLoadPage(page);
         let jobListDetails: any[] = [];
         let pageCounter = 1;
         while (true) {
@@ -193,6 +194,7 @@ async function runScraper(
                       console.log(`Retrying...(${attempt})`);
                     }
                   }
+                    await lazyLoadPage(detailPage);
                 } else {
                   console.log(
                     `  (${index + 1}) Page detail selector :`,
