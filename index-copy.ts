@@ -57,11 +57,13 @@ async function runScraper(
   resultFilepath: string = RESULT_FILE_PATH,
   usageLogFilepath: string = LOG_FILE_PATH,
   options: ScraperOptions = {
+    headlessBrowser: true,
     maxJobDetailsNavigatorPerPage: 3,
     maxPagesPerSource: 2,
   },
 ) {
   const {
+    headlessBrowser: headless,
     includeCompanyFromSource,
     maxJobDetailsNavigatorPerPage,
     maxPagesPerSource,
@@ -76,7 +78,11 @@ async function runScraper(
     included.push(includeCompanyFromSource);
   }
 
-  const browser = await puppeteer.launch();
+  const browser = await puppeteer.launch({
+    headless: headless,
+    defaultViewport: null,
+    args: ["--start-maximized"],
+  });
 
   if (fs.existsSync(usageLogFilepath)) {
     fs.truncateSync(usageLogFilepath, 0);
@@ -443,6 +449,7 @@ console.log("Process starting...");
 
 const args = await argv;
 await runScraper(RESULT_FILE_PATH, LOG_FILE_PATH, {
+  headlessBrowser: args.headlessBrowser,
   includeCompanyFromSource:
     args.includeCompanyFromSource?.length === 1
       ? args.includeCompanyFromSource[0]
