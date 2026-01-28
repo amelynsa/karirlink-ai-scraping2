@@ -433,6 +433,7 @@ async function runScraper(
     console.error(error);
   } finally {
     summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
+    csvStream.end();
     await browser.close();
   }
 }
