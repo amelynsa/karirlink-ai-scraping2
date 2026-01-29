@@ -19,6 +19,7 @@ import { handleScrapingError } from "./helpers/handleScrapingError.ts";
 import { handleScrapingSuccess } from "./helpers/handleScrapingSuccess.ts";
 import { ScraperError } from "./types/ScraperErrorClass.ts";
 import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
+import { readSourcesFromGoogleSheet } from "./utils/readSourcesFromGoogleSheet.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -102,8 +103,8 @@ async function runScraper(
   csvStream.pipe(streamCSVExtractedData);
 
   try {
-    console.log("Reading sources...");
-    const rows = readSourcesFromExcel("./storage/source-10.xlsx");
+    console.log("Reading source file from Google Sheet ...");
+    const rows = await readSourcesFromGoogleSheet();
 
     let extractedData: Object[] = [];
     let usageData: any[] = [];
