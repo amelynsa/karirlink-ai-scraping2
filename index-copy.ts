@@ -61,31 +61,78 @@ async function runScraper(
 
   try {
     console.log("Reading sources...");
-    const rows = readSourcesFromExcel("./storage/source-10.xlsx");
+    // const rows = readSourcesFromExcel("./storage/10_perusahaan_indonesia.xlsx");
+
+    // --- [MULAI CODE BARU] Ganti bagian pembacaan Excel dengan ini ---
+  
+    
+    // Gunakan 'let' (jangan const) supaya datanya bisa kita filter/ubah
+    let rows = readSourcesFromExcel("./storage/10_perusahaan_indonesia.xlsx");
+
+    // Tangkap kata kunci dari terminal (misal: "mandiri")
+    const keyword = process.argv[2]; 
+
+    // Cek apakah ada keyword filter (dan bukan flag --headless dsb)
+    if (keyword && !keyword.startsWith("--")) {
+        console.log(`\n🎯 MODE FILTER AKTIF: Hanya memproses perusahaan "${keyword}"...`);
+        
+        // Filter array 'rows' hanya untuk perusahaan yang cocok
+        rows = rows.filter((row: any) => {
+            const nama = row['Perusahaan'] || row['perusahaan'] || "";
+            return nama.toString().toLowerCase().includes(keyword.toLowerCase());
+        });
+
+        // Validasi hasil filter
+        if (rows.length === 0) {
+            console.error(`❌ ERROR: Tidak ditemukan perusahaan dengan nama "${keyword}" di Excel.`);
+            process.exit(1); // Stop program kalau salah ketik
+        } else {
+            console.log(`✅ BERHASIL: Ditemukan ${rows.length} perusahaan.`);
+            console.log(`   Target: ${rows[0]['Perusahaan'] || rows[0]['perusahaan']}`);
+            
+            // Debugging Header Excel (Penting!)
+            if (!rows[0]['url']) {
+                 console.error("\n⚠️  WARNING FATAL: Kolom 'url' tidak terbaca!"); 
+                 console.error("   -> Cek header Excel kolom C, harusnya 'url' (kecil semua).\n");
+            }
+        }
+    } else {
+        console.log("⚠️  Filter kosong. Menjalankan scraper untuk SEMUA perusahaan.");
+    }
+
+    // --- [AKHIR CODE BARU] ---
 
     let extractedData: Object[] = [];
     let usageData: any[] = [];
 
     console.log("Extracting data from sources...\n");
     for (const row of rows) {
-      if (!included.includes(row.perusahaan)) {
-        console.log("Skipped.");
-        continue;
-      }
-      console.log(`Getting job listings data from: ${row.karirURL}...`);
-      const page = await browser.newPage();
-      for (let i = 0; i < 3; i++) {
-        try {
-          await page.goto(row.karirURL, {
-            waitUntil: "networkidle2",
-          });
-        } catch (error: any) {
-          if (i === 3) {
-            throw error;
+      let page;
+      try {
+        if (included.length > 0 && !included.includes(row.perusahaan)) {
+          console.log("Skipped.");
+          continue;
+        }
+        NUMBER_OF_SOURCES++;
+        const pages = await browser.pages();
+        if (pages.length > 0) {
+          page = pages[0];
+        } else {
+          page = await browser.newPage();
+        }
+        console.log(`Getting job listings data from: ${row.url}...`);
+        for (let i = 0; i < 3; i++) {
+          try {
+            await page.goto(row.url, {
+              waitUntil: "networkidle2",
+            });
+          } catch (error: any) {
+            if (i === 3) {
+              throw error;
+            }
+            console.error(error.message);
+            console.log(`Retrying...(${i})`);
           }
-          console.error(error.message);
-          console.log(`Retrying...(${i})`);
-          // continue;
         }
       }
 
@@ -321,10 +368,14 @@ async function runScraper(
 console.time("Process finished in: ");
 console.log("Process starting...");
 await runScraper(RESULT_FILE_PATH, LOG_FILE_PATH, {
-  includeCompanyFromSource: ["Bank Mandiri", "Bank BRI"],
-  maxJobDetailsNavigatorPerPage: 0,
-  maxPagesPerSource: 1,
+  headlessBrowser: args.headlessBrowser,
+  includeCompanyFromSource:
+    args.includeCompanyFromSource?.length === 1
+      ? args.includeCompanyFromSource[0]
+      : args.includeCompanyFromSource,
+  maxPagesPerSource: 10,
+  // maxPagesPerSource: args.maxPagesPerSource,
+  maxJobDetailsNavigatorPerPage: args.maxJobDetailsNavigatorPerPage,
 });
 
-// await sumTotalUsageToken("./logs/usage-log.jsonl");
-console.timeEnd("Process finished in: ");
+console.timeEnd("Process finished in ");
