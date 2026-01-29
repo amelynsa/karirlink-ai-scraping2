@@ -1,6 +1,6 @@
 import z from "zod";
 
-const jobSchema = z.object({
+export const jobSchema = z.object({
   title: z
     .string()
     .optional()

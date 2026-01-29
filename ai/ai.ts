@@ -2,6 +2,8 @@ import { jsonSchema, nextBtnJsonSchema } from "../schema/schema.js";
 import { GoogleGenAI } from "@google/genai";
 import * as dotenv from "dotenv";
 import { type ResponseData } from "../types/interface.js";
+import z from "zod";
+import { jobSchema } from "../schema/jobSchema.ts";
 
 dotenv.config();
 
@@ -16,18 +18,33 @@ export async function extractData(rawData: string): Promise<ResponseData> {
       contents: `
       You have to extract job listings from the following raw HTML content: ${rawData}.
       Extract relevant information according to the provided JSON schema for each job listing.
+
+      RULES:
+      - PRIORITIZE ONLY including job listing that is still ACTIVE, 
+      - A job listing is ACTIVE if:
+        - There is content in the page that explicitly states that the job is "active", "open", "available", or equivalent phrase / statement.
+        - There is NO indication that the job has expired.
+        - AND either:
+          - No expiration / closing / end date is provided, OR
+          - The expiration / closing / end date is in the future relative to the current date(${Date.now()}).
+      - A job listing is NOT ACTIVE if:
+        - There is content in the page that explicitly states that the job is "expired", "closed", "no longer available", or equivalent phrase / statement.
+        - OR an expiration / closing / end date is provided and that date is earlier than the current date(${Date.now()}).
+      - If a job is ACTIVE, return it as specified in the schema.
+      - If a job is NOT ACTIVE, EXCLUDE it, do not include it in the list.
+      - If the expiration status cannot be determined from the page content, treat the job as ACTIVE, and return it as specified in the schema.
       For salary, you have to decide between 3 options specified below:
-      1) { "type": "fixed" (Fixed salary in a period of time), "amount": The amount of the salary }
-      2) { "type": "range" (Salary in certain range), min: The lower limit, max: The upper limit }
-      3) { "type": "not specified" (salary info not provided) }
-  
-      If you cannot extract any meaningful job listing data, return empty string "".
-  
-      Else, Return list of jobs in JSON format only as specified by the schema.
+      1) an object, { "type": "hourly" | "daily" | "monthly" | "yearly" | "fixed". (Fixed salary amount, may represent hourly, daily, monthly or yearly salary. If you can not infer between the four, then just put "fixed".), 
+        "amount": The amount of the salary }
+      2) an object, { "type": "range" (Salary in certain range), min: The lower limit, max: The upper limit }
+      3) empty string "" (salary info not provided)
+
+      - If you cannot extract meaningful job listing data from the page content, EXCLUDE it, do not include it in the list.
+      - Else, Return the job listing data in JSON format ONLY as specified by the schema.
       `,
       config: {
         responseMimeType: "application/json",
-        responseJsonSchema: jsonSchema,
+        responseJsonSchema: z.toJSONSchema(z.array(jobSchema)),
       },
     });
 
@@ -49,7 +66,7 @@ export async function extractData(rawData: string): Promise<ResponseData> {
 
 export async function getNextButton(
   rawData: string,
-  initialSelector: string = ""
+  initialSelector: string = "",
 ): Promise<ResponseData> {
   try {
     const response = await client.models.generateContent({
