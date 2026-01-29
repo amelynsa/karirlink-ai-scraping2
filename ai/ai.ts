@@ -102,48 +102,4 @@ export async function getNextButton(
       data: { error: error },
     };
   }
-/**
- * Mengubah HTML mentah menjadi data lowongan kerja terstruktur (JSON)
- */
-export async function extractData2(rawData: string) {
-  // Jika HTML kosong, langsung return array kosong
-  if (!rawData || rawData.trim() === "") {
-    return { data: JSON.stringify([]), usage: {} };
-  }
-
-  const response = await client.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: `
-You are an information extraction system.
-
-TASK:
-Extract ONLY job listing information from the raw HTML below.
-
-RULES:
-- Only extract real job listings (positions / vacancies).
-- Ignore navigation menus, headers, footers, banners, and unrelated text.
-- Output MUST follow the provided JSON schema.
-- Output MUST be an array of job objects.
-- If salary information is not found, use:
-  { "type": "not specified" }
-- For missing text fields, use empty string "".
-- If no job listings are found, return an empty JSON array [].
-
-RAW HTML:
-${rawData}
-    `,
-    config: {
-      responseMimeType: "application/json",
-      responseJsonSchema: jsonSchema,
-    },
-  });
-
-  const data = response.text && response.text.trim() !== ""
-    ? response.text
-    : JSON.stringify([]);
-
-  return {
-    data,
-    usage: response.usageMetadata || {},
-  };
 }
