@@ -8,7 +8,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsx index.ts"
+    "dev": "tsx index-copy.ts"
   },
   "dependencies": {
     "@google/genai": "^1.34.0",
