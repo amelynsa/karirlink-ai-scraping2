@@ -1,5 +1,23 @@
 import z from "zod";
 
+const jobCategory = [
+  "Administrasi dan Manajemen",
+  "Akuntansi/Keuangan",
+  "Hotel/Restoran",
+  "Hukum",
+  "Kesehatan dan Kedokteran",
+  "Komputer/Teknologi Informasi",
+  "Konstruksi dan Teknik",
+  "Layanan Pelanggan",
+  "Manufaktur dan Produksi",
+  "Pendidikan",
+  "Penjualan / Pemasaran",
+  "Pertanian,Hewan dan Konservasi",
+  "Seni/Media/Komunikasi",
+  "Sumber Daya Alam dan Energi",
+  "Sumber Daya Manusia / Personalia",
+  "Lainnya",
+];
 export const jobSchema = z.object({
   title: z
     .string()
@@ -15,6 +33,10 @@ export const jobSchema = z.object({
     .describe(
       "Name of the company that opened the job listing. If not found, return ONLY empty string.",
     ),
+  jobCategory: z
+    .enum(jobCategory)
+    .describe("Category of the job position. If not found, return 'Lainnya'.")
+    .default("Lainnya"),
   location: z
     .string()
     .optional()
@@ -51,7 +73,28 @@ export const jobSchema = z.object({
     .optional()
     .default("")
     .describe(
-      "Detailed description of the job, including responsibilities and requirements. If not found, return ONLY empty string.",
+      "Detailed description of the job, including responsibilities. If not found, return ONLY empty string.",
+    ),
+  requirement: z
+    .string()
+    .optional()
+    .default("")
+    .describe(
+      "Requirements/ qualifications needed for the job position. If not found, return ONLY empty string.",
+    ),
+  companyEmail: z
+    .string()
+    .optional()
+    .default("")
+    .describe(
+      "Contact email address of the company for job application. Must be a valid email address (e.g., hr@company.com, etc.) . If not found, return ONLY empty string.",
+    ),
+  companyPhone: z
+    .string()
+    .optional()
+    .default("")
+    .describe(
+      "Contact phone number of the company for job application. Must be a valid phone number (e.g., +6281234567890, etc.) . If not found, return ONLY empty string.",
     ),
   posting_date: z
     .string()
