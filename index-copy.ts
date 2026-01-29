@@ -19,6 +19,7 @@ import { handleScrapingError } from "./helpers/handleScrapingError.ts";
 import { handleScrapingSuccess } from "./helpers/handleScrapingSuccess.ts";
 import { ScraperError } from "./types/ScraperErrorClass.ts";
 import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
+import { readSourcesFromGoogleSheet } from "./utils/readSourcesFromGoogleSheet.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -102,47 +103,8 @@ async function runScraper(
   csvStream.pipe(streamCSVExtractedData);
 
   try {
-    console.log("Reading sources...");
-    // const rows = readSourcesFromExcel("./storage/10_perusahaan_indonesia.xlsx");
-
-    // --- [MULAI CODE BARU] Ganti bagian pembacaan Excel dengan ini ---
-  
-    
-    // Gunakan 'let' (jangan const) supaya datanya bisa kita filter/ubah
-    let rows = readSourcesFromExcel("./storage/10_perusahaan_indonesia.xlsx");
-
-    // Tangkap kata kunci dari terminal (misal: "mandiri")
-    const keyword = process.argv[2]; 
-
-    // Cek apakah ada keyword filter (dan bukan flag --headless dsb)
-    if (keyword && !keyword.startsWith("--")) {
-        console.log(`\n🎯 MODE FILTER AKTIF: Hanya memproses perusahaan "${keyword}"...`);
-        
-        // Filter array 'rows' hanya untuk perusahaan yang cocok
-        rows = rows.filter((row: any) => {
-            const nama = row['Perusahaan'] || row['perusahaan'] || "";
-            return nama.toString().toLowerCase().includes(keyword.toLowerCase());
-        });
-
-        // Validasi hasil filter
-        if (rows.length === 0) {
-            console.error(`❌ ERROR: Tidak ditemukan perusahaan dengan nama "${keyword}" di Excel.`);
-            process.exit(1); // Stop program kalau salah ketik
-        } else {
-            console.log(`✅ BERHASIL: Ditemukan ${rows.length} perusahaan.`);
-            console.log(`   Target: ${rows[0]['Perusahaan'] || rows[0]['perusahaan']}`);
-            
-            // Debugging Header Excel (Penting!)
-            if (!rows[0]['url']) {
-                 console.error("\n⚠️  WARNING FATAL: Kolom 'url' tidak terbaca!"); 
-                 console.error("   -> Cek header Excel kolom C, harusnya 'url' (kecil semua).\n");
-            }
-        }
-    } else {
-        console.log("⚠️  Filter kosong. Menjalankan scraper untuk SEMUA perusahaan.");
-    }
-
-    // --- [AKHIR CODE BARU] ---
+    console.log("Reading source file from Google Sheet ...");
+    const rows = await readSourcesFromGoogleSheet();
 
     let extractedData: Object[] = [];
     let usageData: any[] = [];
