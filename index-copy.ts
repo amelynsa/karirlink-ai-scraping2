@@ -124,10 +124,10 @@ async function runScraper(
         } else {
           page = await browser.newPage();
         }
-        console.log(`Getting job listings data from: ${row.url}...`);
+        console.log(`Getting job listings data from: ${row.karirURL}...`);
         for (let i = 0; i < 3; i++) {
           try {
-            await page.goto(row.url, {
+            await page.goto(row.karirURL, {
               waitUntil: "networkidle2",
             });
           } catch (error: any) {
