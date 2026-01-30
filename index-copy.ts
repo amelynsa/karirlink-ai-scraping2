@@ -22,6 +22,7 @@ import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
 import { readSourcesFromGoogleSheet } from "./utils/readSourcesFromGoogleSheet.ts";
 import { spawn } from "node:child_process";
 import { runCleanerScript } from "./helpers/runCleanerScript.ts";
+import { sendCSVToEmail } from "./kirim-email/send-email.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -441,6 +442,8 @@ async function runScraper(
     const testResultFilename = CSV_RESULT_FILE_PATH.split("/")[2];
     await runCleanerScript(testResultFilename);
 
+    console.log("\nSending file to email...");
+    await sendCSVToEmail(testResultFilename);
     console.log();
   } catch (error) {
     console.error(error);
