@@ -86,6 +86,13 @@ async function runScraper(
     defaultViewport: null,
     args: ["--start-maximized"],
   });
+  if (!fs.existsSync("./storage")) {
+    fs.mkdirSync("./storage");
+  }
+
+  if (!fs.existsSync("./logs")) {
+    fs.mkdirSync("./logs");
+  }
 
   if (fs.existsSync(usageLogFilepath)) {
     fs.truncateSync(usageLogFilepath, 0);
