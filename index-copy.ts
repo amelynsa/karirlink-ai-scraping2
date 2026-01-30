@@ -20,6 +20,8 @@ import { handleScrapingSuccess } from "./helpers/handleScrapingSuccess.ts";
 import { ScraperError } from "./types/ScraperErrorClass.ts";
 import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
 import { readSourcesFromGoogleSheet } from "./utils/readSourcesFromGoogleSheet.ts";
+import { spawn } from "node:child_process";
+import { runCleanerScript } from "./helpers/runCleanerScript.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -427,6 +429,10 @@ async function runScraper(
     } // this is the end for loop of rows
 
     console.log("Finished extracting data from all sources.");
+    console.log("\nCleaning data...");
+    const testResultFilename = CSV_RESULT_FILE_PATH.split("/")[2];
+    await runCleanerScript(testResultFilename);
+
     console.log();
   } catch (error) {
     console.error(error);
