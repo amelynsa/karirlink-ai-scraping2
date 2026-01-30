@@ -22,6 +22,7 @@ import { lazyLoadPage } from "./helpers/lazyLoadPage.ts";
 import { readSourcesFromGoogleSheet } from "./utils/readSourcesFromGoogleSheet.ts";
 import { spawn } from "node:child_process";
 import { runCleanerScript } from "./helpers/runCleanerScript.ts";
+import { sendCSVToEmail } from "./kirim-email/send-email.ts";
 
 const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, "-");
 const LOG_FILE_PATH = "./logs/usage-log.jsonl";
@@ -46,8 +47,9 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-process.on("uncaughtException", () => {
+process.on("uncaughtException", (err) => {
   console.log("\nUncaught exception occurred.");
+  console.error(err);
   console.log("Menganalisis hasil akhir...");
   summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
   console.timeEnd("Process finished in ");
@@ -85,6 +87,13 @@ async function runScraper(
     defaultViewport: null,
     args: ["--start-maximized"],
   });
+  if (!fs.existsSync("./storage")) {
+    fs.mkdirSync("./storage");
+  }
+
+  if (!fs.existsSync("./logs")) {
+    fs.mkdirSync("./logs");
+  }
 
   if (fs.existsSync(usageLogFilepath)) {
     fs.truncateSync(usageLogFilepath, 0);
@@ -433,6 +442,8 @@ async function runScraper(
     const testResultFilename = CSV_RESULT_FILE_PATH.split("/")[2];
     await runCleanerScript(testResultFilename);
 
+    console.log("\nSending file to email...");
+    await sendCSVToEmail(testResultFilename);
     console.log();
   } catch (error) {
     console.error(error);

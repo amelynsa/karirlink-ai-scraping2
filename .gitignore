@@ -135,8 +135,9 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# venv
-.venv/
+# python environments
+.venv
+
 # output data
 output.json
 /storage
