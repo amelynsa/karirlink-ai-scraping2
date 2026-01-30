@@ -46,8 +46,9 @@ process.on("SIGTERM", () => {
   process.exit(0);
 });
 
-process.on("uncaughtException", () => {
+process.on("uncaughtException", (err) => {
   console.log("\nUncaught exception occurred.");
+  console.error(err);
   console.log("Menganalisis hasil akhir...");
   summarizeRunResult(EXTRACTED_DATA, USAGE_DATA, NUMBER_OF_SOURCES);
   console.timeEnd("Process finished in ");
