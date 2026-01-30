@@ -1,10 +1,11 @@
 import pandas as pd
 import os
+import sys
 
 # ==========================================
 #  KONFIGURASI FILE
 # ==========================================
-NAMA_FILE_INPUT = 'test-result-2026-01-28T12-33-31-998Z.csv'
+NAMA_FILE_INPUT = sys.argv[1]
 # ==========================================
 
 # --- 1. SETUP LOKASI FILE ---
@@ -17,10 +18,10 @@ if not os.path.exists(file_path):
     print(" ERROR: File tidak ditemukan.")
     exit()
 
-# --- 2. BACA CSV (DELIMITER ;) ---
+# --- 2. BACA CSV (DELIMITER ,) ---
 df = pd.read_csv(
     file_path,
-    sep=';',
+    sep=',',
     encoding='utf-8',
     on_bad_lines='skip'
 )
@@ -46,7 +47,7 @@ else:
     print(" Kolom duplikat tidak lengkap, skip step ini")
 
 # --- 5. SIMPAN HASIL (NAMA BARU BIAR AMAN) ---
-output_name = NAMA_FILE_INPUT.replace('.csv', '_CLEANED_FINAL_V2.csv')
+output_name = NAMA_FILE_INPUT.replace('.csv', '_CLEANED_FINAL_V2.csv').replace('test-result-', 'RESULT-')
 output_file = os.path.join(script_dir, '..', 'storage', output_name)
 
 df.to_csv(output_file, index=False)
