@@ -11,13 +11,14 @@ NAMA_FILE_INPUT = sys.argv[1]
 
 # --- 1. SETUP LOKASI FILE ---
 script_dir = os.path.dirname(os.path.abspath(__file__))
-file_path = os.path.join(script_dir, '..', 'storage',NAMA_FILE_INPUT)
+# file_path = os.path.join(script_dir, '..', 'storage',NAMA_FILE_INPUT)
+file_path = NAMA_FILE_INPUT
 
 
 if not os.path.exists(file_path):
     print(json.dumps({
         "status": "error",
-        "message": "File tidak ditemukan"
+        "message": f"File tidak ditemukan: {file_path}"
     }),file=sys.stderr)
     sys.exit(1)
 
@@ -58,6 +59,6 @@ df.to_csv(output_file, index=False)
 print(json.dumps({
     "status": "ok",
     "message": "Berhasil cleaning file",
-    "output_file": output_name,
+    "output_file": os.path.basename(output_name),
     "output_path": output_file
 }))

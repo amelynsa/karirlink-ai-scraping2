@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import path from "node:path";
 import { __dirname } from "../utils/__dirname.ts";
+import { existsSync } from "node:fs";
 
 interface CleanerResult {
   status: "ok" | "error";
@@ -9,10 +10,20 @@ interface CleanerResult {
   message?: string;
 }
 
-export function runCleanerScript(filename: string): Promise<CleanerResult> {
+export function runCleanerScript(filePath: string): Promise<CleanerResult> {
   return new Promise((resolve, reject) => {
-    const filePath = path.join(__dirname, "..", "cleaning", "test.py");
-    const pythonProcess = spawn("python", [filePath, filename]);
+    if (!existsSync(path.join(process.cwd(), ".venv"))) {
+      reject(
+        new Error("Python virtual environment not found. Did you setup .venv?"),
+      );
+    }
+    const pythonExecutable =
+      process.platform === "win32"
+        ? path.join(process.cwd(), ".venv", "Scripts", "python")
+        : path.join(process.cwd(), ".venv", "bin", "python");
+
+    const scriptPath = path.join(process.cwd(), "cleaning", "test.py");
+    const pythonProcess = spawn(pythonExecutable, [scriptPath, filePath]);
 
     let stdout = "";
     let stderr = "";
@@ -42,3 +53,7 @@ export function runCleanerScript(filename: string): Promise<CleanerResult> {
     });
   });
 }
+
+// await runCleanerScript("test-result-2026-02-03T04-51-02-212Z.csv")
+//   .then((res) => console.log(res))
+//   .catch((e) => console.error(e));
