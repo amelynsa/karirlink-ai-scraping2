@@ -136,6 +136,10 @@ export async function getDOMBody(
   }
 }
 
+/**
+ * Membaca file Excel berisi daftar perusahaan dan link karir
+ * Digunakan sebagai source registry (50 perusahaan)
+ */
 export function readSourcesFromExcel(path: string) {
   const workbook = xlsx.readFile(path);
   const sheetName = workbook.SheetNames[0];
