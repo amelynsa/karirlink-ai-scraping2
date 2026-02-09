@@ -2,7 +2,10 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "extends": ["@tsconfig/node-lts/tsconfig.json","@tsconfig/node-ts/tsconfig.json"],
   "compilerOptions": {
+    "outDir": "dist",
     "forceConsistentCasingInFileNames": true,
     "lib": ["DOM"]
-  }
+    
+  },
+  "exclude": ["storage/**/*","logs/**/*"],
 }
